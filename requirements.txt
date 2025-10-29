@@ -1,0 +1,8 @@
+flask
+joblib
+numpy
+scikit-learn
+kubernetes
+requests
+pandas
+prometheus-client

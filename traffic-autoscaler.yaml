@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traffic-autoscaler
+  template:
+    metadata:
+      labels: 
+        app: traffic-autoscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: autoscaler-sa
+      containers:
+      - name: autoscaler
+        image: fawetah1/traffic-autoscaler:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: metrics
+        command: ["python"]
+        args: ["/app/autoscaler.py"]
+        env:
+        - name: PROMETHEUS_URL
+          value: "http://prometheus-server.default.svc.cluster.local:80/api/v1/query"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traffic-autoscaler
+spec:
+  selector:
+    app: traffic-autoscaler
+  ports:
+    - name: http-metrics
+      port: 8000
+      targetPort: 8000
+      protocol: TCP

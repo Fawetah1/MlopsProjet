@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: traffic-server
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: traffic-server
+  endpoints:
+    - port: http         # <--- Must match Service port name
+      path: /metrics
+      interval: 15s

@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: traffic-autoscaler
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: traffic-autoscaler
+  endpoints:
+    - port: http-metrics
+      path: /metrics
+      interval: 15s
