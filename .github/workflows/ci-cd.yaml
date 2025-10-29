@@ -1,0 +1,54 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Build Flask app image
+      - name: Build Flask Docker image
+        run: docker build -t ${{ secrets.DOCKER_USER }}/traffic-server:latest -f Dockerfile .
+
+      # Build Autoscaler image
+      - name: Build Autoscaler Docker image
+        run: docker build -t ${{ secrets.DOCKER_USER }}/traffic-autoscaler:latest -f Dockerfile.autoscaler .
+
+      # Login to Docker Hub
+      - name: Login to Docker Hub
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+
+      # Push Docker images
+      - name: Push Docker images
+        run: |
+          docker push ${{ secrets.DOCKER_USER }}/traffic-server:latest
+          docker push ${{ secrets.DOCKER_USER }}/traffic-autoscaler:latest
+
+      # Setup kubectl to deploy
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: '1.27.3'
+
+      # Deploy manifests
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f traffic-server.yaml
+          kubectl apply -f traffic-autoscaler.yaml
+          kubectl rollout status deployment/traffic-server
+          kubectl rollout status deployment/traffic-autoscaler
