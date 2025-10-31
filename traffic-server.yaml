@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: traffic-server
-        image: fawetah1/traffic-server:v3
+        image: fawetah1/traffic-server:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
