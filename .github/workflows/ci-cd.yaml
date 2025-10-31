@@ -10,22 +10,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ensure full repo history
 
+      # Debug: list files to confirm requirements.txt exists
+      - name: List repo files
+        run: ls -la
+
+      # Setup Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # Install dependencies
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install --upgrade pip && pip install -r requirements.txt
 
       # Build Flask app image
       - name: Build Flask Docker image
         run: docker build -t ${{ secrets.DOCKER_USER }}/traffic-server:latest -f Dockerfile .
 
-      # Build Autoscaler image
+      # Build Autoscaler Docker image
       - name: Build Autoscaler Docker image
         run: docker build -t ${{ secrets.DOCKER_USER }}/traffic-autoscaler:latest -f Dockerfile.autoscaler .
 
@@ -45,10 +54,10 @@ jobs:
         with:
           version: '1.27.3'
 
-      # Deploy manifests
+      # Deploy Kubernetes manifests
       - name: Apply Kubernetes manifests
         run: |
           kubectl apply -f traffic-server.yaml
           kubectl apply -f traffic-autoscaler.yaml
           kubectl rollout status deployment/traffic-server
-          kubectl rollout status deployment/traffic-autoscaler
+          kubectl rollout status deployment/traffic-autoscaler*
