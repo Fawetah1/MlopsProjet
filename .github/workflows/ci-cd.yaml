@@ -32,7 +32,7 @@ jobs:
 
       # Build Flask app image
       - name: Build Flask Docker image
-        run: docker build -t ${{ secrets.DOCKER_USER }}/traffic-server:latest -f Dockerfile .
+        run: docker build -t ${{ secrets.DOCKER_USER }}/traffic-server:v3 -f Dockerfile .
 
       # Build Autoscaler Docker image
       - name: Build Autoscaler Docker image
